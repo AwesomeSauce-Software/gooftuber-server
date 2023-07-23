@@ -1,0 +1,5 @@
+/sessions_allow_sessions.txt
+/verified_sessions.txt
+/venv/*
+/.idea/*
+/avatars/*
