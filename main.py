@@ -7,7 +7,7 @@ import asyncio
 import discord
 from quart import Quart, request, websocket
 
-token = "MTEzMjYyOTAwOTc1NTI5NTc5NQ.GqzDHq.jQTkK1Xr_d3fSzV_cRIXqTT_F8BnyfPXXtpk_U"
+token = "put token here :) definitely didnt leak it before here :)"
 
 app = Quart(__name__)
 client = discord.Client(intents=discord.Intents.all())
