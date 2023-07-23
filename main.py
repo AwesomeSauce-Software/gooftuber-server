@@ -170,6 +170,12 @@ def save_verified_sessions():
 
 
 def add_to_verified_sessions(user_id, session_id):
+    # check if user is already verified, if so, remove the old session id
+    if user_id in verified_sessions.values():
+        for session in verified_sessions:
+            if verified_sessions[session] == user_id:
+                del verified_sessions[session]
+                break
     verified_sessions[session_id] = user_id
 
 
