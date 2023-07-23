@@ -30,10 +30,10 @@ session_ask_ids = {
 }
 
 current_data = {
-    '1532219753': {
-        'voice_activity': 1.2,
-        'action': 'action_from_expression_name'
-    }
+    # 'session_id': {
+    #     'voice_activity': 1.2,
+    #     'action': 'action_from_expression_name'
+    # }
 }
 
 
