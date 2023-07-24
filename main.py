@@ -140,6 +140,15 @@ async def request_session(sourcesession, userid):
     return {'message': 'Session request sent!'}
 
 
+@app.route('/ping', methods=['GET'])
+async def ping():
+    """
+    Pings the server.
+    :return:
+    """
+    return {'message': 'Pong!'}
+
+
 @app.route('/allow-session/<invite_id>', methods=['GET'])
 async def allow_session(invite_id):
     """
