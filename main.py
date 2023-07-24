@@ -4,12 +4,29 @@ import random
 import threading
 import time
 import asyncio
+import urllib
+
 import discord
 from quart import Quart, request, websocket
+import logging
 
-token = "put token here :) definitely didnt leak it before here :)"
+from quart_cors import cors
 
-app = Quart(__name__)
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
+token = ""
+
+# load contents of ./TOKEN into token variable
+if os.path.isfile('TOKEN'):
+    with open('TOKEN', 'r') as f:
+        token = f.read()
+else:
+    print('TOKEN file not found! Please create a file called TOKEN in the same directory as main.py and paste your '
+          'Discord bot token in it.')
+    exit(1)
+
+app = cors(Quart(__name__))
 client = discord.Client(intents=discord.Intents.all())
 avatar_dir = 'avatars/'
 verifications = {}
@@ -33,6 +50,7 @@ current_data = {
     # 'session_id': {
     #     'voice_activity': 1.2,
     #     'action': 'action_from_expression_name'
+    #     'timestamp': 1234567890
     # }
 }
 
@@ -84,7 +102,7 @@ def does_user_exist(userid):
     return False
 
 
-def get_session_id(userid) -> str:
+def get_session_id(userid):
     """
     Gets the session ID of a user.
     :param userid:
@@ -109,6 +127,7 @@ async def request_session(sourcesession, userid):
     if not does_user_exist(userid):
         return {'message': 'Invalid user ID!'}
     session_invite_id = ""
+    request_username = urllib.parse.quote_plus(client.get_user(int(userid)).name)
     for i in range(10):
         session_invite_id += str(random.randint(0, 9))
     session_ask_ids[session_invite_id] = {
@@ -116,7 +135,8 @@ async def request_session(sourcesession, userid):
         'allow_session_id': get_session_id(userid)
     }
     await send_message(userid, f'User <@{verified_sessions[sourcesession]}> is requesting access to your session. Open '
-                               f'this link to allow access: https://api.ptgms.space/allow-session/{session_invite_id}')
+                               f'this link to allow access: https://auth.awesomesauce.software/?username='
+                               f'{request_username}&inviteid={session_invite_id}')
     return {'message': 'Session request sent!'}
 
 
@@ -141,6 +161,29 @@ async def allow_session(invite_id):
         }
     sessions_allow_sessions[sessionid]['allowed_sessions'].append(allow_sessionid)
     return {'message': 'Session allowed!'}
+
+
+@app.route('/deny-session/<invite_id>', methods=['GET'])
+async def deny_session(invite_id):
+    """
+    User denies another user to access their session.
+    :param invite_id: The invite ID of the session.
+    :return:
+    """
+    if invite_id not in session_ask_ids:
+        return {'message': 'Invalid invite ID!'}, 401
+    sessionid = session_ask_ids[invite_id]['session_id']
+    allow_sessionid = session_ask_ids[invite_id]['allow_session_id']
+    if sessionid not in verified_sessions:
+        return {'message': 'Invalid session ID!'}
+    if allow_sessionid not in verified_sessions:
+        return {'message': 'Invalid session ID!'}
+    if sessionid not in sessions_allow_sessions:
+        sessions_allow_sessions[sessionid] = {
+            'allowed_sessions': []
+        }
+    sessions_allow_sessions[sessionid]['allowed_sessions'].remove(allow_sessionid)
+    return {'message': 'Session denied!'}
 
 
 def load_verified_sessions():
@@ -283,7 +326,10 @@ async def receive_data(sessionid):
         for session in sessions_allow_sessions[sessionid]['allowed_sessions']:
             if session in current_data:
                 userid = verified_sessions[session]
-                response[userid] = current_data[session]
+                response[userid] = {
+                    'voice_activity': current_data[str(get_session_id(userid))]['voice_activity'],
+                    'action': current_data[str(get_session_id(userid))]['action'],
+                }
         if len(response) == 0:
             await websocket.send("No data available!")
             return
@@ -309,7 +355,10 @@ async def receive_data_user(sessionid, userid):
         allowed_sessions = sessions_allow_sessions[sessionid]['allowed_sessions']
         if str(get_session_id(userid)) in allowed_sessions:
             if str(get_session_id(userid)) in current_data:
-                response[userid] = current_data[str(get_session_id(userid))]
+                response[userid] = {
+                    'voice_activity': current_data[str(get_session_id(userid))]['voice_activity'],
+                    'action': current_data[str(get_session_id(userid))]['action'],
+                }
             else:
                 return {'message': 'Data is not being sent!'}
         else:
@@ -335,7 +384,9 @@ async def send_data(sessionid):
     while True:
         data = await websocket.receive()
         print("Received data:", data)
-        current_data[sessionid] = data
+        data_with_timestamp = eval(data)
+        data_with_timestamp['timestamp'] = time.time()
+        current_data[sessionid] = data_with_timestamp
         await websocket.send("OK")
 
 
@@ -345,9 +396,22 @@ async def before_serving():
         os.mkdir("avatars")
     load_verified_sessions()
     threading.Thread(target=save_verified_sessions).start()
+    threading.Thread(target=clean_up_old_data).start()
     loop = asyncio.get_event_loop()
     await client.login(token)
     loop.create_task(client.connect())
+
+
+def clean_up_old_data():
+    while True:
+        time.sleep(60)
+        for session in current_data:
+            if current_data[session]['timestamp'] < time.time() - 60:
+                del current_data[session]
+
+        for session_ask_id in session_ask_ids:
+            if session_ask_ids[session_ask_id]['expires'] < time.time():
+                del session_ask_ids[session_ask_id]
 
 
 if __name__ == '__main__':
