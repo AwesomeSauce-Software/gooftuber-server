@@ -344,7 +344,6 @@ async def websocketCon(sessionid, userids):
             continue
         response = {}
         for userid in userids:
-            # print(userid)
             if str(get_session_id(userid)) in sessions_allow_sessions[sessionid]['allowed_sessions']:
                 if str(get_session_id(userid)) in current_data:
                     response[userid] = {
@@ -475,13 +474,20 @@ async def before_serving():
 def clean_up_old_data():
     while True:
         time.sleep(60)
+        current_data_to_delete = []
         for session in current_data:
             if current_data[session]['timestamp'] < time.time() - 60:
-                del current_data[session]
+                current_data_to_delete.append(session)
+        for session in current_data_to_delete:
+            del current_data[session]
 
-        for verify in verifications:
-            if verifications[verify]['expires'] < time.time() - 300:
-                del verifications[verify]
+        verifications_to_delete = []
+        for code in verifications:
+            if verifications[code]['expires'] < time.time() - 300:
+                verifications_to_delete.append(code)
+
+        for code in verifications_to_delete:
+            del verifications[code]
 
 
 if __name__ == '__main__':
