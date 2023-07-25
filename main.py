@@ -330,12 +330,16 @@ async def receive_data(sessionid):
     if sessionid not in verified_sessions:
         await websocket.close(code=401)
         return
+    # check if sessionid is in sessions_allow_sessions
+    if sessionid not in sessions_allow_sessions:
+        await websocket.close(code=401)
+        return
     #     get all current_data for what the session is allowed to access
     print("Connected to send data:", sessionid)
     prev = {}
     while True:
         response = {}
-        for session in sessions_allow_sessions[sessionid]['allowed_sessions']:
+        for session in sessions_allow_sessions[str(sessionid)]['allowed_sessions']:
             if session in current_data:
                 userid = verified_sessions[session]
                 response[userid] = {
@@ -361,6 +365,9 @@ async def receive_data_user(sessionid, userid):
     """
     # check if session is valid
     if sessionid not in verified_sessions:
+        await websocket.close(code=401)
+        return
+    if sessionid not in sessions_allow_sessions:
         await websocket.close(code=401)
         return
     #     get all current_data for what the session is allowed to access
@@ -402,7 +409,7 @@ async def send_data(sessionid):
 
     while True:
         data = await websocket.receive()
-        print("Received data:", data)
+        # print("Received data:", data)
         data_with_timestamp = eval(data)
         data_with_timestamp['timestamp'] = time.time()
         current_data[sessionid] = data_with_timestamp
