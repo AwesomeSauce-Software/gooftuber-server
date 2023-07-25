@@ -328,7 +328,8 @@ async def receive_data(sessionid):
     :return:
     """
     if sessionid not in verified_sessions:
-        return {'message': 'Invalid session ID!'}, 401
+        await websocket.close(code=401)
+        return
     #     get all current_data for what the session is allowed to access
     print("Connected to send data:", sessionid)
     prev = {}
@@ -360,9 +361,10 @@ async def receive_data_user(sessionid, userid):
     """
     # check if session is valid
     if sessionid not in verified_sessions:
-        return {'message': 'Invalid session ID!'}, 401
+        await websocket.close(code=401)
+        return
     #     get all current_data for what the session is allowed to access
-    print("Connected to send data:", sessionid)
+    # print("Connected to send data:", sessionid)
     prev = {}
     while True:
         response = {}
@@ -394,8 +396,9 @@ async def send_data(sessionid):
     :return:
     """
     if sessionid not in verified_sessions:
-        return {'message': 'Invalid session ID!'}, 401
-    print("Connected to receive data:", sessionid)
+        await websocket.close(code=401)
+        return
+    # print("Connected to receive data:", sessionid)
 
     while True:
         data = await websocket.receive()
