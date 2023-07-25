@@ -333,6 +333,7 @@ async def websocketCon(sessionid, userids):
 # print("Connected to websocket:", sessionid)
     while True:
         await asyncio.sleep(0.01)
+        # was there a message sent?
         data = await websocket.receive()
         if data.startswith("SEND"):
             data_with_timestamp = eval(data.replace("SEND", ""))
@@ -352,14 +353,12 @@ async def websocketCon(sessionid, userids):
                         'action': current_data[str(get_session_id(userid))]['action'],
                     })
                 else:
-                    await websocket.send("ERROR No data being sent!")
                     continue
             else:
                 await websocket.send("ERROR Session not allowed!")
                 continue
         if len(response) == 0:
-            await websocket.send("ERROR No data available!")
-            return
+            continue
         await websocket.send(str(response))
 
 
