@@ -379,16 +379,18 @@ async def receive_data(sessionid):
         return
     #     get all current_data for what the session is allowed to access
     print("Connected to send data:", sessionid)
+    # {{'userid': 1234, 'voice_activity': 1.2, 'action': 'action_from_expression_name'}, ...}}
     prev = {}
     while True:
-        response = {}
+        response = []
         for session in sessions_allow_sessions[str(sessionid)]['allowed_sessions']:
             if session in current_data:
                 userid = verified_sessions[session]
-                response[userid] = {
+                response.append({
+                    'userid': userid,
                     'voice_activity': current_data[str(get_session_id(userid))]['voice_activity'],
                     'action': current_data[str(get_session_id(userid))]['action'],
-                }
+                })
         if len(response) == 0:
             await websocket.send("No data available!")
             return
