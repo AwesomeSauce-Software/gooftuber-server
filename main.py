@@ -168,7 +168,7 @@ async def allow_session(invite_id):
         sessions_allow_sessions[sessionid] = {
             'allowed_sessions': []
         }
-    sessions_allow_sessions[sessionid]['allowed_sessions'].append(allow_sessionid)
+        sessions_allow_sessions[sessionid]['allowed_sessions'].append(allow_sessionid)
     return {'message': 'Session allowed!'}
 
 
