@@ -415,7 +415,7 @@ async def receive_data(sessionid):
 
 
 @app.websocket('/receive-data/<sessionid>/<userids>')
-async def receive_data_user(sessionid, userid):
+async def receive_data_user(sessionid, userids):
     """
     Receives data from the clients connected to the server.
     :param sessionid:
@@ -432,7 +432,7 @@ async def receive_data_user(sessionid, userid):
     #     get all current_data for what the session is allowed to access
     # print("Connected to send data:", sessionid)
     prev = {}
-    userids = userid.split(",")
+    userids = userids.split(",")
     while True:
         response = []
         allowed_sessions = sessions_allow_sessions[sessionid]['allowed_sessions']
