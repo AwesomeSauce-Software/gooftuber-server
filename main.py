@@ -414,7 +414,7 @@ async def receive_data(sessionid):
         await asyncio.sleep(0.01)
 
 
-@app.websocket('/receive-data/<sessionid>/<userid>')
+@app.websocket('/receive-data/<sessionid>/<userids>')
 async def receive_data_user(sessionid, userid):
     """
     Receives data from the clients connected to the server.
@@ -432,19 +432,19 @@ async def receive_data_user(sessionid, userid):
     #     get all current_data for what the session is allowed to access
     # print("Connected to send data:", sessionid)
     prev = {}
+    userids = userid.split(",")
     while True:
-        response = {}
+        response = []
         allowed_sessions = sessions_allow_sessions[sessionid]['allowed_sessions']
-        if str(get_session_id(userid)) in allowed_sessions:
-            if str(get_session_id(userid)) in current_data:
-                response[userid] = {
-                    'voice_activity': current_data[str(get_session_id(userid))]['voice_activity'],
-                    'action': current_data[str(get_session_id(userid))]['action'],
-                }
-            else:
-                return {'message': 'Data is not being sent!'}
-        else:
-            return {'message': 'Session not allowed to access data!'}
+        for session in allowed_sessions:
+            if session in current_data:
+                userid = verified_sessions[session]
+                if userid in userids:
+                    response.append({
+                        'userid': userid,
+                        'voice_activity': current_data[str(get_session_id(userid))]['voice_activity'],
+                        'action': current_data[str(get_session_id(userid))]['action'],
+                    })
         if len(response) == 0:
             await websocket.send("No data available!")
             return
