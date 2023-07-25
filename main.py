@@ -1,3 +1,4 @@
+import json
 import os
 import base64
 import random
@@ -329,7 +330,7 @@ async def get_avatars(sessionid, userid):
                 'filename': file,
                 'base64': base64.b64encode(f.read()).decode('utf-8')
             })
-    return {'avatars': avatars}
+    return json.dumps({'avatars': avatars})
 
 
 @app.websocket('/websocket/<sessionid>/<userids>')
@@ -372,7 +373,7 @@ async def websocketCon(sessionid, userids):
                 continue
         if len(response) == 0:
             continue
-        await websocket.send(str({'data': response}))
+        await websocket.send(json.dumps({'data': response}))
 
 
 @app.websocket('/receive-data/<sessionid>')
