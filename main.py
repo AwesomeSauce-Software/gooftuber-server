@@ -362,7 +362,7 @@ async def websocketCon(sessionid, userids):
                 if str(get_session_id(userid)) in current_data:
                     response.append({
                         'userid': userid,
-                        'voice_activity': current_data[str(get_session_id(userid))]['voice_activity'],
+                        'voice_activity': round(current_data[str(get_session_id(userid))]['voice_activity'], 6),
                         'action': current_data[str(get_session_id(userid))]['action'],
                     })
                 else:
