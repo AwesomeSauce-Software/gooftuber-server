@@ -358,7 +358,6 @@ async def websocketCon(sessionid, userids):
             continue
         response = []
         for userid in userids:
-            # {'6744123507': {'allowed_sessions': ['9944430414', '9944430414']}, '9944430414': {'allowed_sessions': ['6744123507']}}
             if str(get_session_id(userid)) in sessions_allow_sessions[sessionid]['allowed_sessions']:
                 if str(get_session_id(userid)) in current_data:
                     response.append({
@@ -373,7 +372,7 @@ async def websocketCon(sessionid, userids):
                 continue
         if len(response) == 0:
             continue
-        await websocket.send(str(response))
+        await websocket.send(str({'data': response}))
 
 
 @app.websocket('/receive-data/<sessionid>')
