@@ -97,7 +97,7 @@ def does_user_exist(userid):
         :param userid: The user ID of the user to check.
         """
     for session in verified_sessions:
-        if verified_sessions[session] == userid:
+        if verified_sessions[session] == str(userid):
             return True
     return False
 
@@ -149,6 +149,19 @@ async def ping():
     return {'message': 'Pong!'}
 
 
+@app.route('/validsession/<sessionid>', methods=['GET'])
+async def validsession(sessionid):
+    """
+    Checks if a session ID is valid.
+    :param sessionid: The session ID to check.
+    :return:
+    """
+    if sessionid in verified_sessions:
+        return {'message': 'Session is valid!'}
+    else:
+        return {'message': 'Session is invalid!'}, 401
+
+
 @app.route('/allow-session/<invite_id>', methods=['GET'])
 async def allow_session(invite_id):
     """
@@ -168,7 +181,7 @@ async def allow_session(invite_id):
         sessions_allow_sessions[sessionid] = {
             'allowed_sessions': []
         }
-        sessions_allow_sessions[sessionid]['allowed_sessions'].append(allow_sessionid)
+    sessions_allow_sessions[sessionid]['allowed_sessions'].append(allow_sessionid)
     return {'message': 'Session allowed!'}
 
 
@@ -345,6 +358,7 @@ async def websocketCon(sessionid, userids):
             continue
         response = []
         for userid in userids:
+            # {'6744123507': {'allowed_sessions': ['9944430414', '9944430414']}, '9944430414': {'allowed_sessions': ['6744123507']}}
             if str(get_session_id(userid)) in sessions_allow_sessions[sessionid]['allowed_sessions']:
                 if str(get_session_id(userid)) in current_data:
                     response.append({
