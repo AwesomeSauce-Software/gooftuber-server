@@ -319,6 +319,50 @@ async def get_avatars(sessionid, userid):
     return {'avatars': avatars}
 
 
+@app.websocket('/websocket/<sessionid>/<userids>')
+async def websocketCon(sessionid, userids):
+    """
+    Sends and receives data from the clients connected to the server.
+    :param sessionid:
+    :return:
+    """
+    if sessionid not in verified_sessions:
+        await websocket.close(code=401)
+        return
+    userids = userids.split(",")
+# print("Connected to websocket:", sessionid)
+    while True:
+        await asyncio.sleep(0.01)
+        data = await websocket.receive()
+        if data.startswith("SEND"):
+            data_with_timestamp = eval(data.replace("SEND", ""))
+            data_with_timestamp['timestamp'] = time.time()
+            current_data[sessionid] = data_with_timestamp
+            await websocket.send("OK")
+
+        if sessionid not in sessions_allow_sessions:
+            continue
+        response = {}
+        for userid in userids:
+            # print(userid)
+            if str(get_session_id(userid)) in sessions_allow_sessions[sessionid]['allowed_sessions']:
+                if str(get_session_id(userid)) in current_data:
+                    response[userid] = {
+                        'voice_activity': current_data[str(get_session_id(userid))]['voice_activity'],
+                        'action': current_data[str(get_session_id(userid))]['action'],
+                    }
+                else:
+                    await websocket.send("ERROR No data being sent!")
+                    continue
+            else:
+                await websocket.send("ERROR Session not allowed!")
+                continue
+        if len(response) == 0:
+            await websocket.send("ERROR No data available!")
+            return
+        await websocket.send(str(response))
+
+
 @app.websocket('/receive-data/<sessionid>')
 async def receive_data(sessionid):
     """
@@ -435,9 +479,9 @@ def clean_up_old_data():
             if current_data[session]['timestamp'] < time.time() - 60:
                 del current_data[session]
 
-        for session_ask_id in session_ask_ids:
-            if session_ask_ids[session_ask_id]['expires'] < time.time():
-                del session_ask_ids[session_ask_id]
+        for verify in verifications:
+            if verifications[verify]['expires'] < time.time() - 300:
+                del verifications[verify]
 
 
 if __name__ == '__main__':
