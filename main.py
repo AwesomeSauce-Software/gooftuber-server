@@ -327,6 +327,8 @@ async def receive_data(sessionid):
     :param sessionid:
     :return:
     """
+    if sessionid not in verified_sessions:
+        return {'message': 'Invalid session ID!'}
     #     get all current_data for what the session is allowed to access
     print("Connected to send data:", sessionid)
     prev = {}
@@ -356,6 +358,9 @@ async def receive_data_user(sessionid, userid):
     :param userid: UserID to get data of
     :return:
     """
+    # check if session is valid
+    if sessionid not in verified_sessions:
+        return {'message': 'Invalid session ID!'}
     #     get all current_data for what the session is allowed to access
     print("Connected to send data:", sessionid)
     prev = {}
