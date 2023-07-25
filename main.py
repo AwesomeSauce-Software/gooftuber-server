@@ -342,14 +342,15 @@ async def websocketCon(sessionid, userids):
 
         if sessionid not in sessions_allow_sessions:
             continue
-        response = {}
+        response = []
         for userid in userids:
             if str(get_session_id(userid)) in sessions_allow_sessions[sessionid]['allowed_sessions']:
                 if str(get_session_id(userid)) in current_data:
-                    response[userid] = {
+                    response.append({
+                        'userid': userid,
                         'voice_activity': current_data[str(get_session_id(userid))]['voice_activity'],
                         'action': current_data[str(get_session_id(userid))]['action'],
-                    }
+                    })
                 else:
                     await websocket.send("ERROR No data being sent!")
                     continue
