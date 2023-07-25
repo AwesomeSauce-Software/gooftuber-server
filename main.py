@@ -10,7 +10,7 @@ import discord
 from quart import Quart, request, websocket
 import logging
 
-from quart_cors import cors
+# from quart_cors import cors
 
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
@@ -26,7 +26,7 @@ else:
           'Discord bot token in it.')
     exit(1)
 
-app = cors(Quart(__name__))
+app = Quart(__name__)
 client = discord.Client(intents=discord.Intents.all())
 avatar_dir = 'avatars/'
 verifications = {}
